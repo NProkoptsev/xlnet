@@ -772,7 +772,7 @@ def regression_loss(hidden, labels, initializer, scope, reuse=None,
         name='logit')
 
     logits = tf.squeeze(logits, axis=-1)
-    loss = tf.square(logits - labels)
+    loss = tf.nn.sigmoid_cross_entropy_with_logits(labels = labels, logits = logits)
 
     if return_logits:
       return loss, logits

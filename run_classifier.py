@@ -31,6 +31,8 @@ from classifier_utils import PaddingInputExample
 from classifier_utils import convert_single_example
 from prepro_utils import preprocess_text, encode_ids
 
+import pandas as pd
+
 
 # Model
 flags.DEFINE_string("model_config_path", default=None,
@@ -335,6 +337,24 @@ class ImdbProcessor(DataProcessor):
           text = f.read().strip().replace("<br />", " ")
         examples.append(InputExample(
             guid="unused_id", text_a=text, text_b=None, label=label))
+    return examples
+
+class PickleProcessor(DataProcessor):
+  def get_labels(self):
+    return [0.0]
+
+  def get_train_examples(self, data_dir):
+    return self._create_examples(os.path.join(data_dir, "train.pkl"))
+
+  def get_dev_examples(self, data_dir):
+    return self._create_examples(os.path.join(data_dir, "test.pkl"))
+
+  def _create_examples(self, data_dir):
+    examples = []
+    df = pd.read_pickle(data_dir)
+    for x,y in zip(df['text'],df['label']):
+      examples.append(InputExample(
+          guid="unused_id", text_a=x, text_b=None, label=y))
     return examples
 
 
@@ -667,7 +687,8 @@ def main(_):
       "mnli_mismatched": MnliMismatchedProcessor,
       'sts-b': StsbProcessor,
       'imdb': ImdbProcessor,
-      "yelp5": Yelp5Processor
+      "yelp5": Yelp5Processor,
+      "pickle" : PickleProcessor
   }
 
   if not FLAGS.do_train and not FLAGS.do_eval and not FLAGS.do_predict:
